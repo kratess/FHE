@@ -71,7 +71,7 @@ Below are the performance trends observed during the benchmark sweeps.
 - **Python 3** (for visualization)
 
 ### Installation, Build and Running
-- **Benchmarking**: Follow guide in `benchmark/README.md`
+- **Benchmarking**: Follow guide in [`benchmark/README.md`](benchmark/README.md)
 
 ## Test Environment
 
