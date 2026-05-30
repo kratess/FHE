@@ -15,16 +15,18 @@ The primary goal of this research is to evaluate the practical performance overh
 
 ```
 .
-├── benchmark/      # Core C++ benchmark suite
-│   ├── bfv/        # BFV (Brakerski-Fan-Vercauteren) benchmarks
-│   ├── bgv/        # BGV (Brakerski-Gentry-Vaikuntanathan) benchmarks
-│   ├── ckks/       # CKKS (Cheon-Kim-Kim-Song) benchmarks
-│   └── results/    # Benchmark results
-├── prio3/          # Prio3 experiments and FHE-based VDAF prototypes
-│   ├── prio3_normal_main.rs   # Normal Prio3 example
-│   ├── fhe-vdaf-1/            # Simpler FHE protocol that mimics Prio3
-│   ├── fhe-vdaf-2/            # Sharded FHE protocol closer to Prio3
-│   └── openfhe-bgv-rs/        # Rust wrapper used by the FHE prototypes
+├── benchmark/                  # Core C++ benchmark suite
+│   ├── bfv/                    # BFV (Brakerski-Fan-Vercauteren) benchmarks
+│   ├── bgv/                    # BGV (Brakerski-Gentry-Vaikuntanathan) benchmarks
+│   ├── ckks/                   # CKKS (Cheon-Kim-Kim-Song) benchmarks
+│   └── results/                # Benchmark results
+├── keys/                       # Key material and helper files for local experiments
+├── linear_regression/          # Linear regression experiments with FHE
+├── prio3/                      # Prio3 experiments and FHE-based VDAF prototypes
+│   ├── prio3_normal_main.rs    # Normal Prio3 example
+│   ├── fhe-vdaf-1/             # Simpler FHE protocol that mimics Prio3
+│   ├── fhe-vdaf-2/             # Sharded FHE protocol closer to Prio3
+│   └── openfhe-bgv-rs/         # Rust wrapper used by the FHE prototypes
 └── README.md
 ```
 
