@@ -1,191 +1,163 @@
-# FHE VDAF Prototype 1
+# FHE VDAF 1
 
-This crate implements a simpler VDAF-like prototype over OpenFHE BGV.
-It is similar in shape to Prio3 because clients submit encrypted reports,
-aggregators validate and aggregate them, and the collector combines aggregator
-outputs to recover one aggregate result.
+This is the simplest prototype in this repo.
 
-Unlike `fhe-vdaf-2`, this protocol does not split each value into shards.
-Each client sends the whole encrypted input to exactly one aggregator.
+Think of it like this:
 
-## Protocol Shape
+- Clients have numbers.
+- Clients encrypt each number.
+- Each encrypted number is sent to one aggregator.
+- The aggregator checks that the encrypted bits look valid.
+- The collector adds the aggregator outputs and gets only the final sum.
 
-The demo uses:
+This is "VDAF-like" because there are still three roles:
 
-```rust
-const CLIENTS_NUM: usize = 2;
-const AGGREGATORS_NUM: usize = 2;
-```
+- client
+- aggregator
+- collector
 
-Each client can submit any number of input values. For every input:
+But it is not a full VDAF specification. It is a small demo built on OpenFHE BGV.
 
-1. The client checks that the value is at most `MAX_SIZE`.
-2. The value is encoded into binary BGV slots.
-3. The packed value is encrypted.
-4. A fixed-seed RNG chooses one aggregator to receive that encrypted input.
+## What The Code Does
 
-The assignment is random-looking but deterministic for now because the demo
-uses a fixed `RNG_SEED`.
+In [`src/main.rs`](./src/main.rs):
 
-## Input Encoding
+- `MAX_SIZE = 100`
+- `AGGREGATORS_NUM = 2`
+- each client can send multiple values
 
-Each input is represented directly as a bounded binary vector:
-
-```text
-[ low binary bits | capped top bit ]
-```
-
-The number of value slots is derived from `MAX_SIZE`. Low slots use normal
-binary weights. The last slot uses the remaining weight needed to make the
-all-ones encoding decode exactly to `MAX_SIZE`.
-
-For example, if `MAX_SIZE = 62`, the slot weights are:
-
-```text
-[1, 2, 4, 8, 16, 31]
-```
-
-So `62` is encoded as:
-
-```text
-[1, 1, 1, 1, 1, 1]
-```
-
-That decodes as:
-
-```text
-1 + 2 + 4 + 8 + 16 + 31 = 62
-```
-
-For example, the value `5` is encoded as:
-
-```text
-[1, 0, 1, 0, 0, 0, 0]
-```
-
-There is no signature field and no final validity slot in this protocol.
-
-## Validator/Aggregator Work
-
-Each aggregator receives encrypted full inputs. The aggregator acts as a
-validator before adding an input to its aggregate.
-
-For each encrypted input, it checks that every slot is binary by computing:
-
-```text
-s * (s - 1)
-```
-
-This is zero when `s` is `0` or `1`, and nonzero for invalid slot values.
-The aggregator sums all slot errors into slot `0` using `EvalSum`:
-
-```text
-err_sum = sum(s_i * (s_i - 1))
-```
-
-Then it converts the encrypted error sum into an encrypted boolean using
-Fermat's little theorem. For prime plaintext modulus `p`:
-
-```text
-x^(p - 1) = 0 when x = 0
-x^(p - 1) = 1 when x != 0
-```
-
-The code computes:
-
-```text
-is_error = err_sum^(p - 1)
-is_ok = 1 - is_error
-```
-
-`is_ok` is then replicated across every slot with rotations and masks.
-The original encrypted input is multiplied by this replicated mask:
-
-```text
-checked_input = input * is_ok
-```
-
-If the input is valid, `is_ok = 1` and the ciphertext stays unchanged.
-If the input is invalid, `is_ok = 0` and the whole ciphertext becomes zero.
-
-After validation, the aggregator homomorphically adds all checked inputs it
-received and returns one encrypted aggregate share to the collector.
-
-## Collector Work
-
-The collector receives encrypted aggregate shares from the aggregators. It does
-not need individual client inputs.
-
-The collector:
-
-1. Homomorphically adds the aggregator aggregate shares.
-2. Decrypts the final collector ciphertext.
-3. Decodes the binary slots into an integer.
-4. Checks that the decoded value equals the expected aggregate in the demo.
-
-In the current demo values:
+The demo clients are:
 
 ```text
 client 0: 51, 7, 4
 client 1: 49, 13
-expected total = 124
 ```
 
-## Similarity To Prio3
-
-This prototype keeps the VDAF-style separation between clients, aggregators,
-and collector:
-
-- Clients submit encrypted reports.
-- Aggregators validate reports and aggregate locally.
-- The collector combines aggregator outputs.
-- The final result is an aggregate, not a list of individual reports.
-
-The main difference from Prio3 is that the whole input goes to one aggregator,
-not a shard to every aggregator. Privacy in this prototype relies on the input
-being encrypted under BGV and on aggregators not having the secret key.
-
-## Current Limitations And Risks
-
-This code is a prototype, not a complete protocol.
-
-- Each full input goes to one aggregator. If that aggregator can decrypt, it
-  can recover the full client input.
-- The demo creates the secret key in `main` so it can print debug values and
-  decode the final result. In a real deployment, validators/aggregators must
-  not have access to the secret key.
-- Aggregator assignment uses a fixed RNG seed for reproducibility. Real client
-  routing would need fresh randomness or a defined routing policy.
-- Validation only checks that slots are binary. It does not authenticate the
-  client or prove that the report came from an allowed user.
-- Invalid reports are silently zeroed before aggregation. This keeps aggregation
-  moving, but it means invalid submissions reduce the aggregate instead of
-  causing an explicit protocol failure.
-- The Fermat validity conversion currently supports the plaintext moduli used
-  in the code path, especially `786433`. Unsupported moduli panic.
-- This prototype does not provide a security proof against malicious clients,
-  malicious aggregators, replay, or report duplication.
-
-## Running
-
-OpenFHE must be installed and visible to `openfhe-bgv-rs`. The wrapper supports
-these environment variables:
+So the expected total is:
 
 ```text
-OPENFHE_DIR
-OPENFHE_INCLUDE_DIR
-OPENFHE_LIB_DIR
-OPENFHE_STATIC
+51 + 7 + 4 + 49 + 13 = 124
 ```
 
-Run the demo:
+## Simple Flow
 
-```sh
-cargo run
+For each value:
+
+1. The client checks `value <= MAX_SIZE`.
+2. The client turns the value into bits.
+3. The client encrypts those bits.
+4. One aggregator is chosen.
+5. That aggregator validates the encrypted bits and adds them to its local sum.
+6. The collector adds the aggregator sums and decrypts the final result.
+
+## How A Value Is Encoded
+
+The value is stored as binary slots.
+
+With `MAX_SIZE = 100`, the code uses 7 slots with weights:
+
+```text
+[1, 2, 4, 8, 16, 32, 37]
 ```
 
-Run the tests:
+Why is the last weight `37`?
 
-```sh
-cargo test
+Because the code wants the all-ones vector to decode to exactly `100`:
+
+```text
+1 + 2 + 4 + 8 + 16 + 32 + 37 = 100
 ```
+
+Example:
+
+```text
+value 5 -> [1, 0, 1, 0, 0, 0, 0]
+```
+
+because:
+
+```text
+1 + 4 = 5
+```
+
+Example:
+
+```text
+value 100 -> [1, 1, 1, 1, 1, 1, 1]
+```
+
+## How The Aggregator Checks Validity
+
+The aggregator cannot read the plaintext value, but it can still check whether each slot is a bit.
+
+For each encrypted slot `x`, it computes:
+
+```text
+x * (x - 1)
+```
+
+This gives:
+
+```text
+0 -> 0
+1 -> 0
+2 -> 2
+3 -> 6
+```
+
+So only `0` and `1` pass.
+
+Then the aggregator adds all slot errors:
+
+```text
+E = sum(x_i * (x_i - 1))
+```
+
+- `E = 0` means valid
+- `E != 0` means invalid
+
+The code then turns that into an encrypted yes/no flag and multiplies the whole ciphertext by that flag:
+
+- valid input stays the same
+- invalid input becomes all zeros
+
+So bad inputs are dropped from the sum.
+
+## Small Example
+
+Suppose a client sends:
+
+```text
+7 -> [1, 1, 1, 0, 0, 0, 0]
+```
+
+Every slot is `0` or `1`, so the input is valid.
+
+If somebody somehow sent:
+
+```text
+[1, 2, 1, 0, 0, 0, 0]
+```
+
+then the slot with `2` fails the bit check, and the aggregator turns the whole encrypted input into zero before aggregation.
+
+## What Makes `fhe-vdaf-1` Different
+
+This version does not split one value across all aggregators.
+
+Instead:
+
+- one encrypted value
+- goes to one aggregator
+
+So it is simpler than `fhe-vdaf-2`, but also weaker from a protocol point of view.
+
+## Protocol Problems
+
+1. One aggregator gets the whole encrypted report.
+If that aggregator ever gets the secret key, or if decryption leaks somewhere else, it can recover the client's full value because the value was not split across aggregators.
+
+2. Invalid reports are silently zeroed instead of causing a hard failure.
+That keeps the demo simple, but a real protocol usually needs stronger handling for bad reports, replayed reports, or malicious clients.
+
+3. Malicious validators may inject arbitrary data and mark it as valid. Consequently, the collector does not effectively validate the information and instead aggregates potentially malicious data from untrusted aggregators.
