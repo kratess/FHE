@@ -1,0 +1,14 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# Tooling and local editor files
+/.codex
+/.codex/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Keep the vendored local dependency fully out of git
+/libprio-rs/
