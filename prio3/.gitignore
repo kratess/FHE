@@ -12,3 +12,7 @@
 
 # Keep the vendored local dependency fully out of git
 /libprio-rs/
+
+# Local runtime artifacts for the VDAF demos
+/fhe-vdaf-1/runtime/
+/fhe-vdaf-2/runtime/

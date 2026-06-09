@@ -16,6 +16,22 @@ This is "VDAF-like" because there are still three roles:
 - aggregator
 - collector
 
+## Running The Split Actors
+
+This crate now exposes separate Rust binaries for each role.
+
+From [`prio3/`](../):
+
+```bash
+cargo run -p fhe-vdaf-1 --bin setup
+cargo run -p fhe-vdaf-1 --bin client
+cargo run -p fhe-vdaf-1 --bin aggregator
+cargo run -p fhe-vdaf-1 --bin collector
+```
+
+By default, each binary reads or writes artifacts under `runtime/` inside the crate directory.
+You can override that by passing a different runtime path as the first argument.
+
 But it is not a full VDAF specification. It is a small demo built on OpenFHE BGV.
 
 ## What The Code Does

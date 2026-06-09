@@ -44,6 +44,8 @@ OFHEContext ofhe_bgv_context_new(uint64_t plain_mod, int mult_depth, int batch_s
 
 void ofhe_bgv_context_free(OFHEContext ctx);
 
+uint64_t ofhe_bgv_context_plain_mod(OFHEContext ctx);
+
 size_t ofhe_bgv_ciphertext_serialized_size(OFHECiphertext ct);
 
 int ofhe_bgv_ciphertext_serialize(OFHECiphertext ct, uint8_t* out, size_t out_len);
@@ -141,6 +143,22 @@ OFHEPublicKey ofhe_bgv_deserialize_public_key(OFHEContext ctx, const uint8_t* bu
 int ofhe_bgv_serialize_secret_key(OFHEContext ctx, OFHEPrivateKey sk, uint8_t** out_buf, size_t* out_len);
 
 OFHEPrivateKey ofhe_bgv_deserialize_secret_key(OFHEContext ctx, const uint8_t* buf, size_t len);
+
+int ofhe_bgv_serialize_context(OFHEContext ctx, uint8_t** out_buf, size_t* out_len);
+
+OFHEContext ofhe_bgv_deserialize_context(const uint8_t* buf, size_t len);
+
+int ofhe_bgv_serialize_eval_mult_key(OFHEContext ctx, uint8_t** out_buf, size_t* out_len);
+
+int ofhe_bgv_deserialize_eval_mult_key(OFHEContext ctx, const uint8_t* buf, size_t len);
+
+int ofhe_bgv_serialize_eval_sum_key(OFHEContext ctx, uint8_t** out_buf, size_t* out_len);
+
+int ofhe_bgv_deserialize_eval_sum_key(OFHEContext ctx, const uint8_t* buf, size_t len);
+
+int ofhe_bgv_serialize_eval_rotate_key(OFHEContext ctx, uint8_t** out_buf, size_t* out_len);
+
+int ofhe_bgv_deserialize_eval_rotate_key(OFHEContext ctx, const uint8_t* buf, size_t len);
 
 #ifdef __cplusplus
 }

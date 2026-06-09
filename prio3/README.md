@@ -5,6 +5,8 @@ This folder has:
 - Porting of the BGV scheme to rust
 - 2 FHE protocol prototypes that try to mimic the Prio3 shape
 
+For a detailed comparison between draft Prio3 VDAF and a possible BGV-FHE reinterpretation, see [PRIO3_VS_BGV.md](./PRIO3_VS_BGV.md). That document focuses on what ports cleanly, what only works after redesign, and what is not portable to the BGV schema as-is.
+
 ## Why We Cannot Just "Use FHE On Prio3"
 
 Prio3 is not only "encrypt values and add them".
@@ -42,6 +44,13 @@ That is why we built new FHE-based protocols that only **mimic the Prio3 structu
 - client
 - aggregators
 - collector
+
+Both prototypes are now organized as file-based actor pipelines:
+
+- `setup` generates context and only the key material required by each role
+- `client` encrypts reports and writes ciphertext artifacts
+- `aggregator` loads context plus eval keys only and writes encrypted aggregate shares
+- `collector` loads context plus the secret key and decrypts the final result
 
 ## Our 2 FHE Protocols
 

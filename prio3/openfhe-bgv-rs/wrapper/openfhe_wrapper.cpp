@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -20,6 +21,7 @@
 #include "openfhe.h"
 // Serialization support for CryptoContext / keys / ciphertext.
 #include "openfhe/pke/cryptocontext-ser.h"
+#include "openfhe/pke/key/key-ser.h"
 using namespace lbcrypto;
 
 // ---------------------------------------------------------------------------
@@ -84,6 +86,17 @@ OFHEContext ofhe_bgv_context_new(
 extern "C"
 void ofhe_bgv_context_free(OFHEContext ctx) {
     delete static_cast<ContextBundle*>(ctx);
+}
+
+extern "C"
+uint64_t ofhe_bgv_context_plain_mod(OFHEContext ctx) {
+    if (!ctx) return 0;
+    try {
+        auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+        return cc->GetCryptoParameters()->GetPlaintextModulus();
+    } catch (...) {
+        return 0;
+    }
 }
 
 extern "C"
@@ -415,6 +428,41 @@ bool deserialize_obj(T* out, const uint8_t* buf, size_t len) {
         return false;
     }
 }
+
+template <class Loader>
+int serialize_stream(Loader loader, uint8_t** out_buf, size_t* out_len) {
+    if (!out_buf || !out_len) return 0;
+    *out_buf = nullptr;
+    *out_len = 0;
+    try {
+        std::ostringstream ss;
+        if (!loader(ss)) {
+            return 0;
+        }
+
+        const std::string s = ss.str();
+        if (s.empty()) return 0;
+        auto* buf = new uint8_t[s.size()];
+        std::memcpy(buf, s.data(), s.size());
+        *out_buf = buf;
+        *out_len = s.size();
+        return 1;
+    } catch (...) {
+        return 0;
+    }
+}
+
+template <class Loader>
+int deserialize_stream(const uint8_t* buf, size_t len, Loader loader) {
+    if (!buf || len == 0) return 0;
+    try {
+        std::string s(reinterpret_cast<const char*>(buf), len);
+        std::istringstream ss(s);
+        return loader(ss) ? 1 : 0;
+    } catch (...) {
+        return 0;
+    }
+}
 }  // namespace
 
 extern "C"
@@ -508,4 +556,114 @@ OFHEPrivateKey ofhe_bgv_deserialize_secret_key(
     } catch (...) {
         return nullptr;
     }
+}
+
+extern "C"
+int ofhe_bgv_serialize_context(
+    OFHEContext ctx,
+    uint8_t** out_buf,
+    size_t* out_len)
+{
+    if (!ctx) return 0;
+    return serialize_obj(static_cast<ContextBundle*>(ctx)->cc, out_buf, out_len);
+}
+
+extern "C"
+OFHEContext ofhe_bgv_deserialize_context(const uint8_t* buf, size_t len)
+{
+    if (!buf || len == 0) return nullptr;
+    try {
+        auto* bundle = new ContextBundle();
+        if (!deserialize_obj(&bundle->cc, buf, len)) {
+            delete bundle;
+            return nullptr;
+        }
+        return static_cast<void*>(bundle);
+    } catch (...) {
+        return nullptr;
+    }
+}
+
+extern "C"
+int ofhe_bgv_serialize_eval_mult_key(
+    OFHEContext ctx,
+    uint8_t** out_buf,
+    size_t* out_len)
+{
+    if (!ctx) return 0;
+    auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+    return serialize_stream(
+        [&](std::ostream& os) { return cc->SerializeEvalMultKey(os, SerType::BINARY); },
+        out_buf,
+        out_len);
+}
+
+extern "C"
+int ofhe_bgv_deserialize_eval_mult_key(
+    OFHEContext ctx,
+    const uint8_t* buf,
+    size_t len)
+{
+    if (!ctx) return 0;
+    auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+    cc->ClearEvalMultKeys();
+    return deserialize_stream(buf, len, [&](std::istream& is) {
+        return cc->DeserializeEvalMultKey(is, SerType::BINARY);
+    });
+}
+
+extern "C"
+int ofhe_bgv_serialize_eval_sum_key(
+    OFHEContext ctx,
+    uint8_t** out_buf,
+    size_t* out_len)
+{
+    if (!ctx) return 0;
+    auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+    return serialize_stream(
+        [&](std::ostream& os) { return cc->SerializeEvalSumKey(os, SerType::BINARY); },
+        out_buf,
+        out_len);
+}
+
+extern "C"
+int ofhe_bgv_deserialize_eval_sum_key(
+    OFHEContext ctx,
+    const uint8_t* buf,
+    size_t len)
+{
+    if (!ctx) return 0;
+    auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+    cc->ClearEvalSumKeys();
+    return deserialize_stream(buf, len, [&](std::istream& is) {
+        return cc->DeserializeEvalSumKey(is, SerType::BINARY);
+    });
+}
+
+extern "C"
+int ofhe_bgv_serialize_eval_rotate_key(
+    OFHEContext ctx,
+    uint8_t** out_buf,
+    size_t* out_len)
+{
+    if (!ctx) return 0;
+    auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+    return serialize_stream(
+        [&](std::ostream& os) { return cc->SerializeEvalAutomorphismKey(os, SerType::BINARY); },
+        out_buf,
+        out_len);
+}
+
+extern "C"
+int ofhe_bgv_deserialize_eval_rotate_key(
+    OFHEContext ctx,
+    const uint8_t* buf,
+    size_t len)
+{
+    if (!ctx) return 0;
+    auto& cc = static_cast<ContextBundle*>(ctx)->cc;
+    cc->ClearEvalAutomorphismKeys();
+    return deserialize_stream(buf, len, [&](std::istream& is) {
+        return cc->DeserializeEvalAutomorphismKey(is, SerType::BINARY);
+    });
 }

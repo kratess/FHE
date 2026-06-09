@@ -11,6 +11,22 @@ The main idea is:
 
 So no single aggregator receives the client's value directly.
 
+## Running The Split Actors
+
+This crate now exposes separate Rust binaries for each role.
+
+From [`prio3/`](../):
+
+```bash
+cargo run -p fhe-vdaf-2 --bin setup
+cargo run -p fhe-vdaf-2 --bin client
+cargo run -p fhe-vdaf-2 --bin aggregator
+cargo run -p fhe-vdaf-2 --bin collector
+```
+
+By default, each binary reads or writes artifacts under `runtime/` inside the crate directory.
+You can override that by passing a different runtime path as the first argument.
+
 ## What The Code Does
 
 In [`src/main.rs`](./src/main.rs):
