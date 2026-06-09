@@ -353,6 +353,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fhe-vdaf-1-histogram"
+version = "0.1.0"
+dependencies = [
+ "openfhe-bgv-rs",
+ "rand 0.8.6",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "fhe-vdaf-2"
 version = "0.1.0"
 dependencies = [

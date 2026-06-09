@@ -16,3 +16,4 @@
 # Local runtime artifacts for the VDAF demos
 /fhe-vdaf-1/runtime/
 /fhe-vdaf-2/runtime/
+/fhe-vdaf-1-histogram/runtime/
