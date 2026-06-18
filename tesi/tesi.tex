@@ -1,0 +1,35 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[a4paper,margin=3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{matlab-prettifier}
+
+\lstset{language=Matlab,
+basicstyle=\ttfamily\footnotesize,
+columns=fullflexible
+}
+
+\setlist[enumerate,1]{label=(\alph*), leftmargin=1.2cm, rightmargin=1.2cm}
+\renewcommand{\contentsname}{Indice dei contenuti}
+\renewcommand{\figurename}{Figura}
+
+\title{Elaborazione e aggregazione di dati privacy-aware con tecniche omomorfiche}
+\author{Doru Ionut Parvu}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\input{docs/applicazioni_elaborazioni_omomorfiche_scenari_medicali}
+\input{docs/fhe_vdaf_0}
+
+\end{document}
