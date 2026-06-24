@@ -10,6 +10,8 @@
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{matlab-prettifier}
+\usepackage{booktabs}
+\usepackage{xcolor}
 
 \lstset{language=Matlab,
 basicstyle=\ttfamily\footnotesize,
@@ -26,10 +28,57 @@ columns=fullflexible
 
 \begin{document}
 
+\hypersetup{pageanchor=false}
 \maketitle
+\clearpage
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
 \tableofcontents
+\clearpage
+\pagenumbering{arabic}
 
+\input{docs/introduzione}
+\input{docs/tecniche_omomorfiche}
+\input{docs/benchmark_schemi_omomorfici}
 \input{docs/applicazioni_elaborazioni_omomorfiche_scenari_medicali}
 \input{docs/fhe_vdaf_0}
+
+\begin{thebibliography}{9}
+
+\bibitem{openfhe}
+OpenFHE Development Team,
+\emph{OpenFHE Documentation: Examples and Supported Schemes}.
+\url{https://openfhe-development.readthedocs.io/en/latest/sphinx_rsts/intro/quickstart.html}.
+
+\bibitem{ckks}
+J. H. Cheon, A. Kim, M. Kim e Y. Song,
+\emph{Homomorphic Encryption for Arithmetic of Approximate Numbers},
+Cryptology ePrint Archive, Paper 2016/421, 2016.
+\url{https://eprint.iacr.org/2016/421}.
+
+\bibitem{bgv}
+Z. Brakerski, C. Gentry e V. Vaikuntanathan,
+\emph{Fully Homomorphic Encryption without Bootstrapping},
+Cryptology ePrint Archive, Paper 2011/277, 2011.
+\url{https://eprint.iacr.org/2011/277}.
+
+\bibitem{bfv}
+J. Fan e F. Vercauteren,
+\emph{Somewhat Practical Fully Homomorphic Encryption},
+Cryptology ePrint Archive, Paper 2012/144, 2012.
+\url{https://eprint.iacr.org/2012/144}.
+
+\bibitem{benchrepo}
+D. I. Parvu,
+\emph{FHE Benchmark Suite Repository}.
+\url{https://github.com/kratess/FHE/tree/main/benchmark}.
+
+\bibitem{prio}
+R. Barnes, D. Cook, C. Patton e P. Schoppmann,
+\emph{Verifiable Distributed Aggregation Functions},
+Internet-Draft draft-irtf-cfrg-vdaf-19, Internet Engineering Task Force, Work in Progress, 14 aprile 2026.
+\url{https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/19/}.
+
+\end{thebibliography}
 
 \end{document}

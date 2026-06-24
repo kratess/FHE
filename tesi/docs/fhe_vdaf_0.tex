@@ -1,7 +1,7 @@
 \chapter{Protocollo di aggregazione simil prio3 utilizzando tecniche omomorfiche}
 
 \section{Introduzione}
-Prio3 VDAF \`e, in modo molto semplice, un protocollo pensato per raccogliere dati da pi\`u client e calcolarne un risultato aggregato senza esporre il contributo individuale di ciascuno. L'idea generale \`e che ogni client non invii direttamente il proprio valore in chiaro a un unico soggetto, ma produca una rappresentazione adatta a essere elaborata da pi\`u attori del protocollo. In questo modo, il sistema finale pu\`o recuperare il risultato complessivo senza ricostruire facilmente il dato del singolo partecipante.
+Prio3 VDAF \`e, in modo molto semplice, un protocollo pensato per raccogliere dati da pi\`u client e calcolarne un risultato aggregato senza esporre il contributo individuale di ciascuno \cite{prio}. L'idea generale \`e che ogni client non invii direttamente il proprio valore in chiaro a un unico soggetto, ma produca una rappresentazione adatta a essere elaborata da pi\`u attori del protocollo. In questo modo, il sistema finale pu\`o recuperare il risultato complessivo senza ricostruire facilmente il dato del singolo partecipante.
 
 L'obiettivo di questo capitolo \`e allora il seguente: replicare in ambiente FHE la forma generale di un protocollo di aggregazione ispirato a Prio3, mantenendo l'idea di fondo di raccolta privata e di validazione dei report, ma semplificando l'architettura. La costruzione che introduciamo, chiamata \texttt{fhe-vdaf-0}, usa lo schema omomorfico BGV: i report vengono cifrati dai client, inviati a un unico aggregatore, validati sotto cifratura e poi sommati, in modo che l'attore finale possa apprendere soltanto il risultato aggregato.
 

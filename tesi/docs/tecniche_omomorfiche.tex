@@ -1,0 +1,106 @@
+\chapter{Tecniche di cifratura omomorfica}
+
+\section{Calcolare senza decifrare}
+In una cifratura tradizionale un mittente trasforma un messaggio leggibile in un ciphertext usando una chiave. Chi possiede la chiave corretta pu\`o recuperare il messaggio originale. Se il dato deve essere elaborato, normalmente viene prima decifrato.
+
+La cifratura omomorfica aggiunge una possibilit\`a: alcune operazioni possono essere eseguite direttamente sui ciphertext. Si pu\`o immaginare un'azienda che voglia conoscere la somma delle vendite di pi\`u negozi senza leggere il valore di ciascun negozio. Ogni sede cifra il proprio dato; il server somma i ciphertext; il soggetto autorizzato decifra soltanto il totale.
+
+Un sistema di questo tipo comprende normalmente:
+\begin{itemize}
+  \item una fase di configurazione, nella quale vengono scelti schema e parametri;
+  \item la generazione di una chiave pubblica e di una chiave segreta;
+  \item eventuali chiavi di valutazione, necessarie per operazioni come moltiplicazioni e rotazioni;
+  \item la codifica e la cifratura dei dati;
+  \item la valutazione omomorfica;
+  \item la decifratura e la decodifica del risultato.
+\end{itemize}
+
+La chiave pubblica pu\`o essere distribuita ai soggetti che devono cifrare. La chiave segreta deve invece restare presso il soggetto autorizzato a leggere il risultato. Le chiavi di valutazione consentono al server di trasformare i ciphertext durante il calcolo, ma non dovrebbero permettergli di recuperarne il contenuto.
+
+\section{Base tecnologica: reticoli e rumore}
+Gli schemi considerati in questa tesi si basano su problemi matematici legati ai reticoli. Per comprendere il funzionamento operativo non \`e necessario studiare la geometria completa di questi oggetti. \`E sufficiente osservare che un ciphertext contiene il messaggio in una forma nascosta insieme a una componente casuale, spesso chiamata rumore.
+
+Il rumore \`e utile per la sicurezza, perch\'e impedisce di riconoscere direttamente il messaggio. Durante le operazioni omomorfiche, tuttavia, anche il rumore cambia. Le somme lo aumentano in modo generalmente contenuto; le moltiplicazioni hanno un effetto molto maggiore. Se il rumore supera il margine previsto dai parametri, la decifratura pu\`o restituire un valore errato.
+
+Per questo motivo il programma da eseguire deve essere considerato prima di creare il contesto crittografico. Non basta sapere quanti dati saranno cifrati: bisogna conoscere soprattutto quante moltiplicazioni consecutive saranno necessarie. Questo valore \`e chiamato profondit\`a moltiplicativa.
+
+\subsection{Leveled FHE e bootstrapping}
+Un sistema \emph{leveled} viene configurato per sostenere una profondit\`a massima. Se il calcolo resta entro quel limite, non \`e necessario rinnovare il ciphertext. BGV ha reso particolarmente importante questa impostazione, mostrando come eseguire circuiti di profondit\`a prefissata senza ricorrere obbligatoriamente al bootstrapping \cite{bgv}.
+
+Il bootstrapping \`e un'operazione pi\`u complessa che riduce l'effetto del rumore e rende nuovamente utilizzabile un ciphertext vicino al proprio limite. Permette di proseguire calcoli pi\`u lunghi, ma richiede chiavi aggiuntive, memoria e molto pi\`u tempo rispetto a una somma o a una singola moltiplicazione. In pratica si preferisce evitarlo quando il calcolo pu\`o essere dimensionato in anticipo.
+
+\section{Dati inseriti negli slot}
+I ciphertext moderni non devono necessariamente contenere un solo numero. Attraverso il \emph{packing}, pi\`u valori vengono inseriti in posizioni chiamate slot. Una singola operazione pu\`o quindi agire contemporaneamente su molti elementi, secondo un modello simile al SIMD: la stessa istruzione viene applicata in parallelo a pi\`u dati.
+
+Se due ciphertext contengono rispettivamente i vettori
+\[
+[2,4,6,8]
+\qquad\text{e}\qquad
+[1,3,5,7],
+\]
+la loro somma omomorfica produce un ciphertext che, una volta decifrato, contiene
+\[
+[3,7,11,15].
+\]
+Il costo dell'operazione non cresce come se fossero state eseguite quattro cifrature separate. Il packing \`e quindi essenziale per rendere pratiche aggregazioni e operazioni vettoriali.
+
+\subsection{Dimensione dell'anello e numero di slot}
+La \emph{ring dimension}, indicata spesso con $N$, \`e uno dei parametri centrali. Una dimensione maggiore pu\`o offrire pi\`u slot e sostenere parametri crittografici pi\`u grandi, ma aumenta anche la dimensione dei ciphertext, il tempo delle operazioni e il consumo di memoria.
+
+Nell'implementazione di benchmark usata in questa tesi, BFV e BGV impiegano fino a $N$ slot con il packed encoding, mentre CKKS utilizza $N/2$ slot complessi.
+
+Una dimensione maggiore non significa automaticamente maggiore efficienza. Se l'applicazione usa pochi valori, gran parte degli slot rimane vuota mentre il costo del ciphertext resta elevato. Il vantaggio emerge quando gli slot vengono riempiti con un batch abbastanza grande.
+
+\subsection{Rotazioni}
+Le somme e le moltiplicazioni agiscono slot per slot. Per combinare elementi che occupano posizioni diverse servono le rotazioni. Una rotazione sposta ciclicamente il contenuto degli slot; ripetendo rotazioni e somme si pu\`o, ad esempio, calcolare la somma di tutti gli elementi di un vettore.
+
+Le rotazioni richiedono evaluation keys dedicate. Generare e conservare molte chiavi di rotazione pu\`o avere un costo rilevante. Una buona disposizione dei dati negli slot riduce il numero di rotazioni richieste e pu\`o incidere sull'efficienza quanto la scelta dello schema.
+
+\section{BFV e BGV: interi esatti modulo un primo}
+BFV, derivato dal lavoro di Fan e Vercauteren \cite{bfv}, e BGV \cite{bgv} rappresentano dati interi. Questi valori appartengono a uno spazio finito determinato dal \emph{plaintext modulus}, indicato con $p$. In pratica, $p$ stabilisce quali valori possono essere rappresentati direttamente: ogni somma o moltiplicazione viene ricondotta a un risultato compreso tra $0$ e $p-1$.
+
+\subsection{Differenza pratica tra BFV e BGV}
+BFV e BGV condividono molte caratteristiche visibili all'utilizzatore: dati interi, risultati esatti entro lo spazio modulare, packing e operazioni aritmetiche. Differiscono nella costruzione interna e nella gestione del rumore. Di conseguenza, a parit\`a apparente di parametri, possono mostrare tempi e consumi diversi.
+
+Occorre verificare il circuito reale, i parametri supportati dalla libreria e le prestazioni sulla macchina destinata all'esecuzione. Nel protocollo di aggregazione di questa tesi viene usato BGV perch\'e i report sono interi e la validazione sfrutta direttamente propriet\`a dell'aritmetica modulo $p$. Infine un grosso vantaggio dello schema BGV è la velocità nell'eseguire operazioni di moltiplicazioni relativo a BFV.
+
+\section{CKKS: numeri reali e complessi approssimati}
+CKKS nasce per elaborare numeri reali o complessi in forma approssimata \cite{ckks}. Questa caratteristica lo rende adatto a regressione, statistica e machine learning, dove coefficienti e risultati intermedi non sono necessariamente interi.
+
+Il valore viene codificato usando una scala. Dopo alcune operazioni, in particolare le moltiplicazioni, la scala e la dimensione numerica dei coefficienti devono essere gestite attraverso il \emph{rescaling}. Il risultato decifrato non coincide sempre cifra per cifra con il calcolo in chiaro, ma dovrebbe essere vicino entro la precisione prevista.
+
+Per esempio, un risultato teorico pari a $12{,}5$ potrebbe essere decifrato come $12{,}50001$. In un modello statistico tale differenza pu\`o essere trascurabile; in un conteggio esatto o in una logica che richiede uguaglianze perfette potrebbe invece essere inaccettabile.
+
+CKKS pu\`o rappresentare anche valori complessi. Quando l'applicazione usa soltanto numeri reali, la struttura complessa resta parte del meccanismo di packing. In modo intuitivo si pu\`o dire che ogni slot ospita un valore complesso, formato da una parte reale e da una parte immaginaria; per questo, nella configurazione adottata, gli slot indipendenti disponibili sono normalmente pari a $N/2$.
+
+\section{Parametri che cambiano il costo}
+\subsection{Profondit\`a moltiplicativa}
+La profondit\`a non \`e il numero totale di moltiplicazioni, ma il massimo numero di moltiplicazioni lungo una sequenza dipendente. Dieci prodotti indipendenti possono essere eseguiti allo stesso livello; il prodotto del risultato precedente per un nuovo valore consuma invece un altro livello.
+
+Richiedere una profondit\`a molto superiore al necessario produce contesti, chiavi e ciphertext pi\`u costosi. Richiederne troppo poca impedisce di completare il calcolo. La prima ottimizzazione consiste quindi nel descrivere il circuito e nel ridurre le moltiplicazioni consecutive.
+
+\subsection{Modulo del plaintext e valori massimi}
+Per BFV e BGV il modulo del plaintext stabilisce lo spazio degli interi rappresentabili e influenza il batching. Un modulo pi\`u grande consente risultati intermedi pi\`u ampi, ma interagisce con gli altri parametri e non pu\`o essere aumentato senza conseguenze.
+
+Nel benchmark BFV e BGV usano il primo $786433$. La scelta permette di confrontare i due schemi con lo stesso spazio del plaintext e supporta il packing per le dimensioni considerate. Non significa che questo primo sia adatto a ogni applicazione.
+
+\subsection{Batch e slot utilizzati}
+Il \emph{batch length} \`e il numero di valori effettivamente inseriti nel ciphertext. Pu\`o essere inferiore alla capacit\`a massima. Usare pi\`u slot aumenta il lavoro utile svolto da una singola operazione, ma richiede una disposizione coerente dei dati.
+
+In uno scenario con migliaia di contributi, il server pu\`o aggregare pi\`u valori per ciphertext. In uno scenario con un solo valore, la stessa configurazione pu\`o risultare inefficiente. Per questo i benchmark devono essere letti insieme al numero di elementi elaborati e non soltanto come latenza della singola operazione.
+
+\section{Limiti distinti}
+\subsection{Limiti degli schemi}
+Gli schemi impongono vincoli matematici: crescita del rumore, profondit\`a limitata senza bootstrapping, aritmetica modulare per BFV e BGV, approssimazione per CKKS. Inoltre, solo le operazioni esprimibili tramite il circuito supportato possono essere valutate direttamente. Confronti, divisioni e funzioni non lineari possono richiedere approssimazioni, costruzioni pi\`u costose oppure non essere praticabili direttamente.
+
+\subsection{Limiti della libreria}
+OpenFHE offre implementazioni, generatori di contesto, packing e rotazioni per pi\`u schemi \cite{openfhe}. Il bootstrapping, nel contesto considerato in questa tesi, viene invece usato per CKKS. La libreria riduce la complessit\`a di sviluppo, ma non sceglie automaticamente la migliore architettura applicativa. Versione, API disponibili, tecniche di scaling e operazioni implementate determinano ci\`o che il programma pu\`o usare concretamente.
+
+Anche la serializzazione e la distribuzione delle evaluation keys sono responsabilit\`a del sistema.
+
+\section{Scelta dello schema}
+Una regola pratica iniziale pu\`o essere formulata cos\`i:
+\begin{itemize}
+  \item BFV o BGV quando gli input sono interi, il risultato deve essere esatto e l'aritmetica modulare \`e gestita esplicitamente;
+  \item CKKS quando gli input includono valori reali o complessi e una piccola approssimazione \`e accettabile;
+\end{itemize}

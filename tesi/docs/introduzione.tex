@@ -1,0 +1,52 @@
+\chapter{Introduzione}
+
+\section{Contesto e motivazione}
+La quantit\`a di dati raccolti da organizzazioni pubbliche e private cresce continuamente. Ospedali, centri di ricerca, aziende e servizi digitali producono informazioni che possono essere utili per costruire modelli statistici, calcolare indicatori o conoscere l'andamento di un fenomeno. Molti di questi dati sono per\`o sensibili. Un dato medico, una misura economica o una preferenza personale non dovrebbe essere consegnata in chiaro a ogni soggetto che partecipa all'elaborazione.
+
+La soluzione pi\`u immediata consiste nel cifrare i dati quando vengono salvati o trasmessi. La cifratura tradizionale protegge bene queste due fasi, ma normalmente richiede di decifrare le informazioni prima di elaborarle. Il server che esegue il calcolo torna quindi a vedere i valori originali. Questo passaggio crea un punto delicato: per ottenere un risultato bisogna concedere fiducia all'infrastruttura che esegue il calcolo.
+
+La cifratura omomorfica affronta il problema da una prospettiva diversa. Essa permette di eseguire alcune operazioni direttamente sui dati cifrati. Il server riceve ciphertext, cio\`e rappresentazioni non leggibili, applica somme o moltiplicazioni e produce un nuovo ciphertext. Dopo la decifratura, il risultato corrisponde al calcolo che sarebbe stato eseguito sui dati in chiaro. Il server pu\`o quindi contribuire all'elaborazione senza conoscere necessariamente gli input.
+
+Questa propriet\`a \`e interessante, ma non rende il calcolo cifrato gratuito o automaticamente adatto a ogni applicazione. Le operazioni omomorfiche sono pi\`u lente delle operazioni ordinarie, richiedono pi\`u memoria e dipendono da parametri che devono essere scelti con attenzione. Schemi diversi rappresentano tipi di dato diversi e offrono compromessi differenti tra precisione, capacit\`a di calcolo e costo.
+
+\section{Obiettivo della tesi}
+L'obiettivo di questa tesi \`e studiare in modo progressivo come le tecniche omomorfiche possano essere usate per elaborare e aggregare dati proteggendo maggiormente i contributi individuali. Il lavoro non si limita a descrivere gli schemi da un punto di vista teorico. La parte centrale consiste nel collegare le loro caratteristiche a misure sperimentali e, successivamente, a due applicazioni concrete.
+
+Le domande che guidano il lavoro sono semplici:
+\begin{itemize}
+  \item quali tipi di dato possono essere rappresentati dai principali schemi omomorfici;
+  \item quali parametri incidono maggiormente sul costo delle operazioni;
+  \item quale differenza pratica esiste tra sommare e moltiplicare dati cifrati;
+  \item come usare queste tecniche in un modello di regressione lineare;
+  \item come costruire un protocollo di aggregazione ispirato alle VDAF, nel quale il risultato collettivo possa essere recuperato senza trattare in chiaro ogni contributo.
+\end{itemize}
+
+La tesi considera tre schemi disponibili nella libreria OpenFHE: BFV, BGV e CKKS. BFV e BGV sono adatti a operazioni esatte su interi rappresentati in uno spazio modulare. CKKS \`e invece progettato per calcoli approssimati su valori reali o complessi ed \`e quindi utile per molte elaborazioni statistiche e di machine learning \cite{openfhe,ckks}.
+
+\section{Percorso seguito}
+Il lavoro \`e iniziato dallo studio tecnologico degli schemi omomorfici. Prima di scegliere uno schema per un'applicazione, \`e infatti necessario capire che cosa possa rappresentare, quali operazioni supporti e come cambino i ciphertext durante il calcolo. Particolare attenzione \`e stata dedicata alla dimensione dell'anello, al numero di slot disponibili, al modulo del plaintext e alla profondit\`a moltiplicativa.
+
+Il secondo passo \`e stato la costruzione di una suite di benchmark basata su OpenFHE. Gli esperimenti misurano il tempo di creazione del contesto, la generazione delle chiavi, la cifratura, la decifratura, la somma e la moltiplicazione omomorfiche. Per CKKS sono stati misurati anche la generazione delle chiavi di bootstrapping e il bootstrapping stesso. I test variano la dimensione dell'anello e la profondit\`a richiesta, in modo da osservare come aumentino tempo e memoria.
+
+I benchmark non servono a dichiarare uno schema vincitore in ogni situazione. Il loro scopo \`e mostrare che la scelta dipende dal problema. Se i dati sono conteggi interi e si desiderano risultati esatti, BFV o BGV sono candidati naturali. Se si elaborano medie, coefficienti o misure non intere, CKKS offre una rappresentazione pi\`u adatta, accettando un piccolo errore numerico.
+
+Dopo il confronto sperimentale, il lavoro applica CKKS a un caso di machine learning semplice e interpretabile: la regressione lineare. Il caso di studio usa dati sanitari e stima la durata di un ricovero. La regressione \`e stata scelta perch\'e permette di osservare con chiarezza il passaggio dai dati cifrati al modello e perch\'e l'inferenza richiede principalmente somme e moltiplicazioni.
+
+L'ultima parte si sposta dal machine learning all'aggregazione verificabile. Viene presentato un protocollo ispirato a VDAF Prio3, ma reinterpretato tramite BGV. I client cifrano report interi, l'aggregatore verifica sotto cifratura che la loro rappresentazione sia valida e somma i contributi accettati. Il collector decifra il totale finale. L'obiettivo non \`e riprodurre integralmente Prio3, ma studiare una costruzione pi\`u semplice che mantenga l'idea di apprendere un aggregato senza esporre direttamente ogni report.
+
+\section{Contributi principali}
+I contributi del lavoro possono essere riassunti in quattro punti.
+
+\begin{enumerate}
+  \item Una descrizione accessibile delle caratteristiche operative di BFV, BGV e CKKS, con una distinzione tra limiti dello schema, limiti della libreria e limiti della configurazione scelta.
+  \item Una suite sperimentale comune per confrontare le principali operazioni omomorfiche al variare della dimensione dell'anello e della profondit\`a moltiplicativa.
+  \item Un'applicazione di CKKS alla regressione lineare in uno scenario sanitario, con due possibili distribuzioni dei ruoli di calcolo e decifratura.
+  \item Una costruzione di aggregazione VDAF-like basata su BGV, con codifica binaria, validazione omomorfica e decifratura del solo risultato aggregato.
+\end{enumerate}
+
+Il filo comune \`e il passaggio dalla singola operazione crittografica a un sistema completo. La scelta dello schema influenza il formato dei dati; i parametri influenzano costo e capacit\`a; l'architettura stabilisce quali attori possano cifrare, calcolare e decifrare. La privacy non dipende quindi da un solo algoritmo, ma dall'insieme di queste decisioni.
+
+\section{Conclusioni}
+La cifratura omomorfica permette di ripensare il rapporto tra dati e calcolo: il soggetto che elabora non deve necessariamente vedere ci\`o che elabora. Questa possibilit\`a apre scenari utili, ma introduce costi e vincoli che devono essere misurati e compresi.
+
+La tesi segue quindi un percorso intenzionalmente graduale. Parte dagli strumenti di base, li misura, li applica a un modello statistico e infine li inserisce in un protocollo di aggregazione. In questo modo teoria, benchmark e applicazioni non restano parti separate, ma descrivono fasi successive dello stesso problema.
