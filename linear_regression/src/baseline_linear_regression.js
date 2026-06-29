@@ -221,12 +221,12 @@ function train(trainingDataset, epochs = 1, eta = 0.1) {
 }
 
 function main() {
-  const [trainSet, testSet] = loadAndSplitDataset('data/data.csv', 1.0, 1, false);
+  const [trainSet, testSet] = loadAndSplitDataset('data/hospital_data_prob.csv', 1.0, 1, false);
 
   console.log(trainSet);
 
   // Example train call
-  train(trainSet, 100, 0.1);
+  train(trainSet, 10, 0.00001);
 };
 
 main();

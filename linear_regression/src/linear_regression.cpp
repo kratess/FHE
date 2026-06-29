@@ -678,10 +678,10 @@ void train(Dataset trainingDataset, size_t epochs = 10, double eta = 0.1) {
 }
 
 int main() {
-  auto [trainSet, testSet] = loadAndSplitDataset("data/mock_data.csv", 1.0);
+  auto [trainSet, testSet] = loadAndSplitDataset("data/hospital_data_prob.csv", 1.0);
 
   initFHEState();
-  train(trainSet, 10, 0.1);
+  train(trainSet, 10, 0.00001);
 
   return 0;
 }
