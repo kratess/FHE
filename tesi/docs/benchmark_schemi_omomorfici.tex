@@ -51,29 +51,6 @@ In forma intuitiva, se \texttt{Encrypt} produce due ciphertext che proteggono i 
 
 Le misure sono microbenchmark: ogni test isola una singola operazione. Non includono trasferimento in rete, serializzazione, lettura dei dati o coordinamento tra attori. Sono utili per capire dove si concentra il costo, ma non equivalgono alla latenza completa di un'applicazione.
 
-\section{Cifratura e decifratura}
-Le Figure~\ref{fig:benchmark_encrypt} e~\ref{fig:benchmark_decrypt} mostrano rispettivamente il costo di \texttt{Encrypt} e \texttt{Decrypt} al crescere della ring dimension.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.64\textwidth]{figures/benchmark_encrypt.png}
-\caption{Tempo di cifratura con profondit\`a 16.}
-\label{fig:benchmark_encrypt}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.64\textwidth]{figures/benchmark_decrypt.png}
-\caption{Tempo di decifratura con profondit\`a 16.}
-\label{fig:benchmark_decrypt}
-\end{figure}
-
-La cifratura cresce in modo abbastanza regolare con la ring dimension per tutti e tre gli schemi. Nel complesso, i tre andamenti restano piuttosto vicini: nessuno schema mostra un vantaggio netto e costante, e il grafico suggerisce soprattutto che il costo di \texttt{Encrypt} aumenta in modo simile al crescere di $N$.
-
-La decifratura mostra invece differenze pi\`u nette. BFV resta chiaramente lo schema pi\`u rapido in tutto l'intervallo osservato. Tra gli altri due, CKKS tende a richiedere pi\`u tempo di BGV, soprattutto quando la ring dimension cresce. Il distacco principale, quindi, non \`e tra CKKS e BGV, ma tra questi due schemi e BFV.
-
-Una dimensione maggiore offre anche pi\`u slot: BFV e BGV possono inserire $N$ interi, mentre CKKS inserisce $N/2$ valori complessi. Questo aumenta la quantit\`a di dati elaborabili in parallelo, ma rende anche pi\`u costose le singole operazioni.
-
 \section{Somma e moltiplicazione}
 Le Figure~\ref{fig:benchmark_add} e~\ref{fig:benchmark_mult} confrontano le due principali operazioni eseguite sui ciphertext.
 
@@ -96,6 +73,8 @@ La somma \`e chiaramente l'operazione pi\`u economica. I tre schemi restano tutt
 La moltiplicazione cambia nettamente il quadro. Tutti gli schemi crescono con la ring dimension, ma BFV diventa molto pi\`u costoso di BGV e CKKS lungo quasi tutto l'intervallo osservato. Tra questi ultimi due, CKKS risulta in genere leggermente pi\`u rapido, mentre BGV gli resta vicino. Il dato principale che emerge dal grafico \`e quindi la distanza tra \texttt{EvalAdd} e \texttt{EvalMult}, e soprattutto il peso molto maggiore della moltiplicazione in BFV.
 
 Le somme beneficiano del packing, che applica la stessa operazione a tutti gli slot. Quando invece il calcolo richiede controlli, prodotti tra valori o passaggi di machine learning, le moltiplicazioni diventano una parte importante della latenza.
+
+Una dimensione maggiore offre anche pi\`u slot: BFV e BGV possono inserire $N$ interi, mentre CKKS inserisce $N/2$ valori complessi. Questo aumenta la quantit\`a di dati elaborabili in parallelo, ma rende anche pi\`u costose le singole operazioni.
 
 \begin{table}[H]
 \centering
@@ -124,7 +103,7 @@ La Figura~\ref{fig:benchmark_memory} mostra comunque la tendenza generale al cre
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.64\textwidth]{figures/benchmark_memory.png}
-\caption{Heap osservato durante la cifratura, con profondit\`a 16.}
+\caption{Heap osservato durante la creazione del contesto, con profondit\`a 16.}
 \label{fig:benchmark_memory}
 \end{figure}
 
@@ -132,6 +111,13 @@ BFV mostra nel processo di prova un livello di memoria molto inferiore rispetto 
 
 \section{Il costo particolare del bootstrapping}
 CKKS include due benchmark aggiuntivi dedicati al bootstrapping. Il suo costo non dipende direttamente dal valore di profondit\`a usato, ma soprattutto dalla ring dimension. In pratica, aumentando $N$, anche il costo del bootstrapping cresce in modo evidente.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.64\textwidth]{figures/benchmark_bootstrap.png}
+\caption{Tempo di bootstrapping in CKKS con profondit\`a 16.}
+\label{fig:benchmark_bootstrap}
+\end{figure}
 
 Questo rende il bootstrapping un'operazione molto pi\`u pesante delle somme e delle moltiplicazioni ordinarie. In calcoli poco profondi non \`e quindi conveniente, mentre diventa interessante soltanto quando serve proseguire un'elaborazione che altrimenti esaurirebbe i livelli disponibili.
 

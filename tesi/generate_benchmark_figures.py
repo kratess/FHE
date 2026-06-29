@@ -55,15 +55,19 @@ def load_results(scheme):
     return aggregated.merge(stddev, on=key_cols, how="left")
 
 
-def draw(operation, filename, ylabel, metric="cpu_time"):
+def draw(operation, filename, ylabel, metric="cpu_time", schemes=SCHEMES):
     fig, ax = plt.subplots(figsize=(8.4, 4.8))
-    for scheme in SCHEMES:
+    plotted = False
+    for scheme in schemes:
         frame = load_results(scheme)
         selected = frame[
             (frame["operation"] == operation)
             & (frame["depth"] == DEPTH)
             & (frame["ring_dim"].isin(RING_DIMS))
         ].sort_values("ring_dim")
+        if selected.empty:
+            continue
+        plotted = True
         ax.plot(
             selected["ring_dim"],
             selected[metric],
@@ -84,6 +88,10 @@ def draw(operation, filename, ylabel, metric="cpu_time"):
                 capsize=3,
                 alpha=0.75,
             )
+
+    if not plotted:
+        plt.close(fig)
+        return
 
     ax.set_xscale("linear")
     ax.xaxis.set_major_locator(ticker.FixedLocator(RING_DIMS))
@@ -111,8 +119,7 @@ if __name__ == "__main__":
             "axes.spines.right": False,
         }
     )
-    draw("BM_Encrypt", "benchmark_encrypt.png", "Tempo CPU (ms)")
     draw("BM_EvalAdd", "benchmark_add.png", "Tempo CPU (ms)")
     draw("BM_EvalMult", "benchmark_mult.png", "Tempo CPU (ms)")
-    draw("BM_Decrypt", "benchmark_decrypt.png", "Tempo CPU (ms)")
-    draw("BM_Encrypt", "benchmark_memory.png", "Heap osservato (MB)", metric="MB")
+    draw("BM_Bootstrap", "benchmark_bootstrap.png", "Tempo CPU (ms)", schemes=("ckks",))
+    draw("BM_ContextCreation", "benchmark_memory.png", "Heap osservato (MB)", metric="MB")
