@@ -5,6 +5,8 @@ import seaborn as sns
 import os
 import argparse
 
+AGGREGATE_SUFFIXES = ("_mean", "_stddev")
+
 def parse_benchmark_name(name):
     """
     Parses strings like "BM_KeyGen/1/256" or "BM_Bootstrap/1/256/iterations:1"
@@ -46,6 +48,66 @@ def convert_units(df, current_unit):
     else:
         return values_ns, 'ns'
 
+
+def split_aggregate_name(name):
+    for suffix in AGGREGATE_SUFFIXES:
+        if name.endswith(suffix):
+            return name[:-len(suffix)], suffix[1:]
+    return name, None
+
+
+def load_benchmark_results(csv_file):
+    header_row = 0
+    with open(csv_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith('name,'):
+                header_row = i
+                break
+
+    df = pd.read_csv(csv_file, header=header_row)
+    df['base_name'] = df['name'].map(lambda value: split_aggregate_name(str(value))[0])
+    df['aggregate_name'] = df['name'].map(lambda value: split_aggregate_name(str(value))[1])
+
+    ops, depths, ring_dims = [], [], []
+    for name in df['base_name']:
+        op, d, r = parse_benchmark_name(name)
+        ops.append(op)
+        depths.append(d)
+        ring_dims.append(r)
+
+    df['Operation'] = ops
+    df['Depth_int'] = depths
+    df['Depth'] = [str(d) if pd.notna(d) else None for d in depths]
+    df['RingDim'] = ring_dims
+    df = df.dropna(subset=['Operation']).copy()
+
+    value_columns = [col for col in ('cpu_time', 'real_time', 'MB') if col in df.columns]
+    for col in value_columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    key_cols = ['base_name', 'Operation', 'Depth_int', 'Depth', 'RingDim']
+    if df['aggregate_name'].notna().any():
+        mean_rows = df[df['aggregate_name'] == 'mean'].copy()
+        if mean_rows.empty:
+            mean_rows = df[df['aggregate_name'].isna()].copy()
+        stddev_rows = df[df['aggregate_name'] == 'stddev'][key_cols + value_columns].copy()
+        stddev_rows = stddev_rows.rename(columns={col: f'{col}_stddev' for col in value_columns})
+        merged = mean_rows.merge(stddev_rows, on=key_cols, how='left')
+        return merged
+
+    raw_rows = df[df['aggregate_name'].isna()].copy()
+    if raw_rows.empty:
+        return raw_rows
+
+    grouped = raw_rows.groupby(key_cols, as_index=False)
+    aggregated = grouped[value_columns].mean()
+    if 'time_unit' in raw_rows.columns:
+        aggregated = aggregated.merge(grouped['time_unit'].first(), on=key_cols, how='left')
+    stddev = grouped[value_columns].std(ddof=1)
+    stddev = stddev.rename(columns={col: f'{col}_stddev' for col in value_columns})
+    return aggregated.merge(stddev, on=key_cols, how='left')
+
 DEPTH_COLORS = {
     "1": "#f77189",
     "2": "#dc8932",
@@ -68,30 +130,7 @@ def plot_benchmark_results(scheme_name, csv_file, output_dir, max_depth=None, ma
     print(f"Processing {scheme_name} results from {csv_file}...")
 
     try:
-        # Find the line where the actual CSV header starts
-        header_row = 0
-        with open(csv_file, 'r') as f:
-            lines = f.readlines()
-            for i, line in enumerate(lines):
-                if line.startswith('name,'):
-                    header_row = i
-                    break
-        
-        df = pd.read_csv(csv_file, header=header_row)
-
-        # Parse metadata from 'name'
-        ops, depths, ring_dims = [], [], []
-        for name in df['name']:
-            op, d, r = parse_benchmark_name(name)
-            ops.append(op)
-            depths.append(d)
-            ring_dims.append(r)
-            
-        df['Operation'] = ops
-        df['Depth_int'] = depths
-        df['Depth'] = [str(d) for d in depths]
-        df['RingDim'] = ring_dims
-        df = df.dropna(subset=['Operation'])
+        df = load_benchmark_results(csv_file)
 
         # Apply Filters
         if max_depth is not None:
@@ -162,7 +201,7 @@ def plot_benchmark_results(scheme_name, csv_file, output_dir, max_depth=None, ma
                     marker='o', 
                     linewidth=2.5
                 )
-                
+
                 ax.set_xscale('log')
                 unique_rd = sorted(subset_p['RingDim'].unique())
                 ax.set_xticks(unique_rd)

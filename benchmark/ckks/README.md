@@ -16,6 +16,7 @@ A comprehensive benchmarking tool for the **CKKS (Cheon-Kim-Kim-Song)** homomorp
   - `Bootstrap`: Full homographic noise removal (bootstrapping).
   - `BootstrapKeyGen`: Generation of specialty keys required for bootstrapping.
 - **Resource Monitoring**: Tracks execution time (CPU/Real time) and peak heap memory usage (MB).
+- **Statistical Aggregates**: Repeats each benchmark 10 times and exports `mean`, `median`, `stddev`, and `cv` rows in the CSV output.
 - **Visualization**: Integrated with the python-based plotting utility to generate performance graphs from CSV data.
 
 ## Benchmark Results Gallery

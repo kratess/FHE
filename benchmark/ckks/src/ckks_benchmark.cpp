@@ -11,6 +11,10 @@
 
 using namespace lbcrypto;
 
+namespace {
+constexpr int kBenchmarkRepetitions = 10;
+}  // namespace
+
 #if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33))
     #define HAS_MALLINFO2
 #endif
@@ -328,15 +332,15 @@ static void BootstrapArguments(benchmark::internal::Benchmark* b) {
     }
 }
 
-BENCHMARK(BM_ContextCreation)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_EvalKeyGen)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_KeyGen)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_Encrypt)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_Decrypt)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_EvalAdd)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_EvalMult)->Apply(CustomArguments)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ContextCreation)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_EvalKeyGen)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_KeyGen)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_Encrypt)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_Decrypt)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_EvalAdd)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_EvalMult)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
 
-BENCHMARK(BM_BootstrapKeyGen)->Apply(BootstrapArguments)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_Bootstrap)->Apply(BootstrapArguments)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_BootstrapKeyGen)->Apply(BootstrapArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_Bootstrap)->Apply(BootstrapArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
 
 BENCHMARK_MAIN();

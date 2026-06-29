@@ -17,6 +17,7 @@ A comprehensive benchmarking environment for evaluating various homomorphic encr
   - `Bootstrap` (CKKS): Full homographic noise removal (bootstrapping).
   - `BootstrapKeyGen` (CKKS): Generation of specialty keys required for bootstrapping.
 - **Resource Monitoring**: Tracks execution time (CPU/Real time) and peak heap memory usage (MB).
+- **Statistical Aggregates**: Each benchmark is repeated 10 times and exports aggregate rows for `mean`, `median`, `stddev`, and `cv`.
 - **Visualization**: Integrated with the python-based plotting utility to generate performance graphs from CSV data.
 
 ## Project Structure
@@ -68,6 +69,8 @@ Each scheme folder provides its own executable. Export results to CSV for visual
 # Example: Run CKKS Benchmark
 ./build/ckks/ckks_benchmark --benchmark_out=ckks/results.csv --benchmark_out_format=csv
 ```
+
+The generated CSV now contains both raw repetitions and aggregate rows such as `BM_Encrypt/16/4096_mean` and `BM_Encrypt/16/4096_stddev`. The console output is restricted to aggregate rows for readability.
 
 ### 2. Generating Visualizations
 The centralized plotting script allows for selective plotting and data filtering.

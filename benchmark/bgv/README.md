@@ -14,6 +14,7 @@ A comprehensive benchmarking tool for the **BGV (Brakerski-Gentry-Vaikuntanathan
   - `Encrypt` / `Decrypt`: Basic encoding and encryption/decryption operations.
   - `EvalAdd` / `EvalMult`: Homomorphic addition and multiplication.
 - **Resource Monitoring**: Tracks execution time (CPU/Real time) and peak heap memory usage (MB).
+- **Statistical Aggregates**: Repeats each benchmark 10 times and exports `mean`, `median`, `stddev`, and `cv` rows in the CSV output.
 - **Visualization**: Integrated with the python-based plotting utility to generate performance graphs from CSV data.
 
 ## Benchmark Results Gallery
