@@ -35,6 +35,10 @@ struct ContextData {
     int slots;
 };
 
+namespace {
+constexpr int kRotateStep = 1;
+}
+
 class ContextManager {
 private:
     static std::unique_ptr<ContextData> currentContext;
@@ -91,6 +95,9 @@ public:
             data->keys = data->cc->KeyGen();
             data->cc->EvalMultKeyGen(data->keys.secretKey); // Required for multiplication
             data->cc->EvalSumKeyGen(data->keys.secretKey);  // Required for addition over rotations
+            if (opName == "EvalRotate") {
+                data->cc->EvalRotateKeyGen(data->keys.secretKey, {kRotateStep});
+            }
 
             currentContext = std::move(data);
             currentParams = key;
@@ -213,6 +220,22 @@ static void BM_EvalMult(benchmark::State& state) {
     state.counters["MB"] = benchmark::Counter(getHeapUsageMB(), static_cast<benchmark::Counter::Flags>(benchmark::Counter::kDefaults & ~benchmark::Counter::kAvgIterations));
 }
 
+static void BM_EvalRotate(benchmark::State& state) {
+    int depth = state.range(0);
+    int ringDim = state.range(1);
+    ContextData* ctx = ContextManager::GetContext("EvalRotate", depth, ringDim);
+    std::vector<int64_t> x(ctx->slots, 1);
+    Plaintext ptxt = ctx->cc->MakePackedPlaintext(x);
+    auto ciphertext = ctx->cc->Encrypt(ctx->keys.publicKey, ptxt);
+
+    for (auto _ : state) {
+        auto result = ctx->cc->EvalRotate(ciphertext, kRotateStep);
+        benchmark::DoNotOptimize(result);
+    }
+
+    state.counters["MB"] = benchmark::Counter(getHeapUsageMB(), static_cast<benchmark::Counter::Flags>(benchmark::Counter::kDefaults & ~benchmark::Counter::kAvgIterations));
+}
+
 static void CustomArguments(benchmark::internal::Benchmark* b) {
     std::vector<int> depths = {1, 2, 4, 8, 16, 32, 64, 128};
     std::vector<int> ringDims = {256, 512, 1024, 2048, 4096, 8192, 16384};
@@ -231,5 +254,6 @@ BENCHMARK(BM_Encrypt)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Re
 BENCHMARK(BM_Decrypt)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
 BENCHMARK(BM_EvalAdd)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
 BENCHMARK(BM_EvalMult)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
+BENCHMARK(BM_EvalRotate)->Apply(CustomArguments)->Unit(benchmark::kMillisecond)->Repetitions(kBenchmarkRepetitions)->DisplayAggregatesOnly();
 
 BENCHMARK_MAIN();
