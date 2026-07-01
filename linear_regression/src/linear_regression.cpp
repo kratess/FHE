@@ -28,6 +28,11 @@ struct FHEState {
 // Global instance
 FHEState state;
 
+namespace {
+constexpr size_t kMaxTrainingSamples = 64*8;
+constexpr uint32_t kRingDimension = 1024*8;
+}
+
 struct Dataset {
   std::vector<std::vector<double>> X;
   std::vector<double> Y;
@@ -148,7 +153,7 @@ void initFHEState() {
   // Setup CryptoContext
   SecretKeyDist secretKeyDist = UNIFORM_TERNARY;  // SPARSE_TERNARY or UNIFORM_TERNARY {-1, 0, +1}
   SecurityLevel securityLevel = HEStd_NotSet;     // If different from HEStd_NotSet, do not to set ring dimension
-  uint32_t ringDimension = 8192;                  // Number of coefficients in the ring, minimum batchSize*2
+  uint32_t ringDimension = kRingDimension;        // Number of coefficients in the ring, minimum batchSize*2
 
   CCParams<CryptoContextCKKSRNS> parameters;
   parameters.SetSecretKeyDist(secretKeyDist);
@@ -199,6 +204,7 @@ void initFHEState() {
 
   state.ringDim = state.cc->GetRingDimension();
   state.batchSize = state.ringDim / 2;
+  log("FHE", "ringDim " + std::to_string(state.ringDim) + ", batchSize " + std::to_string(state.batchSize));
   log("FHE", "batchSize " + std::to_string(state.batchSize));
 
   if (BOOTSTRAP) state.cc->EvalBootstrapSetup(levelBudget);
@@ -413,6 +419,8 @@ void train(Dataset trainingDataset, size_t epochs = 10, double eta = 0.1) {
   }
 
   size_t paddedFeaturesCount = nextPow2(n_features);
+  log("TRAINING", "samples " + std::to_string(n_samples) + ", features " + std::to_string(n_features) +
+                     ", paddedFeatures " + std::to_string(paddedFeaturesCount));
   // Every line is padded till next power of 2 with zeroes
   padMatrixInPlace(X, n_samples, paddedFeaturesCount);
   // Every line is padded with own elements till paddedFeaturesCount length is reached
@@ -491,6 +499,7 @@ void train(Dataset trainingDataset, size_t epochs = 10, double eta = 0.1) {
   // ---------------------------
   log("TRAINING", "Starting training loop...", "TRAINING_LOOP");
   std::cout << std::endl;
+  std::chrono::duration<double> totalEpochDuration{0};
 
   for (size_t epoch = 0; epoch < epochs; ++epoch) {
     auto startEpoch = std::chrono::steady_clock::now();
@@ -603,6 +612,7 @@ void train(Dataset trainingDataset, size_t epochs = 10, double eta = 0.1) {
     // ---------------------------
 
     auto endEpoch = std::chrono::steady_clock::now();
+    totalEpochDuration += endEpoch - startEpoch;
     auto formattedDuration = formatDuration(startEpoch, endEpoch);
 
     if (DEBUG) {
@@ -647,6 +657,8 @@ void train(Dataset trainingDataset, size_t epochs = 10, double eta = 0.1) {
 
   std::cout << std::endl;
   log("TRAINING", "Ended training loop...", "TRAINING_LOOP");
+  double avgEpochSeconds = epochs == 0 ? 0.0 : totalEpochDuration.count() / static_cast<double>(epochs);
+  std::cout << "Average epoch time: " << std::fixed << std::setprecision(2) << avgEpochSeconds << "s" << std::endl;
 
   // ---------------------------
   // DECRYPT FINAL RESULTS
@@ -679,6 +691,10 @@ void train(Dataset trainingDataset, size_t epochs = 10, double eta = 0.1) {
 
 int main() {
   auto [trainSet, testSet] = loadAndSplitDataset("data/hospital_data_prob.csv", 1.0);
+  if (trainSet.X.size() > kMaxTrainingSamples) {
+    trainSet.X.resize(kMaxTrainingSamples);
+    trainSet.Y.resize(kMaxTrainingSamples);
+  }
 
   initFHEState();
   train(trainSet, 10, 0.00001);
