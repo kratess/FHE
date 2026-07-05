@@ -1,0 +1,5 @@
+samples,epoch_time_seconds
+64,0.95
+128,1.89
+256,4.03
+512,8.64

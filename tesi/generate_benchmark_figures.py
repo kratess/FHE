@@ -119,7 +119,7 @@ if __name__ == "__main__":
             "axes.spines.right": False,
         }
     )
-    draw("BM_EvalAdd", "benchmark_add.png", "Tempo CPU (ms)")
-    draw("BM_EvalMult", "benchmark_mult.png", "Tempo CPU (ms)")
-    draw("BM_Bootstrap", "benchmark_bootstrap.png", "Tempo CPU (ms)", schemes=("ckks",))
+    draw("BM_EvalAdd", "benchmark_add.png", "Tempo (ms)")
+    draw("BM_EvalMult", "benchmark_mult.png", "Tempo (ms)")
+    draw("BM_Bootstrap", "benchmark_bootstrap.png", "Tempo (ms)", schemes=("ckks",))
     draw("BM_ContextCreation", "benchmark_memory.png", "Heap osservato (MB)", metric="MB")
