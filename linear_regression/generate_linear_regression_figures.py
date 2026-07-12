@@ -123,68 +123,76 @@ def draw_scaling(frames, output_path):
 
 
 def draw_epoch_times(frame, output_path):
-    fig, ax = plt.subplots(figsize=(8.8, 5.2))
+    fig, ax = plt.subplots(figsize=(10.8, 5.8))
 
     bootstrap_epoch = 14
     bootstrap_time = frame.loc[frame["epoch"] == bootstrap_epoch, "epoch_time_seconds"].iloc[0]
-    pre_mask = frame["epoch"] < bootstrap_epoch
-    post_mask = frame["epoch"] >= bootstrap_epoch
+    line_color = "#2563EB"
+    bootstrap_color = "#D97706"
 
-    ax.axvspan(0.5, bootstrap_epoch - 0.5, color="#265d97", alpha=0.05)
-    ax.axvspan(bootstrap_epoch - 0.5, frame["epoch"].max() + 0.5, color="#c26b32", alpha=0.05)
+    # The narrow central band marks the epoch in which the ciphertext is refreshed.
+    ax.axvspan(0.5, bootstrap_epoch - 0.5, color="#EFF6FF", zorder=0)
+    ax.axvspan(bootstrap_epoch - 0.5, bootstrap_epoch + 0.5, color="#FFF7ED", zorder=0)
+    ax.axvspan(bootstrap_epoch + 0.5, frame["epoch"].max() + 0.5, color="#F0FDFA", zorder=0)
 
     ax.plot(
         frame["epoch"],
         frame["epoch_time_seconds"],
         marker="o",
-        markersize=7,
-        linewidth=2.6,
-        color="#265d97",
+        markersize=7.5,
+        linewidth=2.8,
+        color=line_color,
+        zorder=2,
     )
     ax.plot(
-        frame.loc[pre_mask, "epoch"],
-        frame.loc[pre_mask, "epoch_time_seconds"],
-        linewidth=0,
+        bootstrap_epoch,
+        bootstrap_time,
         marker="o",
-        markersize=7,
-        color="#265d97",
-    )
-    ax.plot(
-        frame.loc[post_mask, "epoch"],
-        frame.loc[post_mask, "epoch_time_seconds"],
         linewidth=0,
-        marker="o",
-        markersize=7,
-        color="#c26b32",
+        markersize=11,
+        color=bootstrap_color,
+        markeredgecolor="white",
+        markeredgewidth=1.5,
+        zorder=3,
     )
 
-    ax.axvline(bootstrap_epoch, color="#c26b32", linestyle="--", linewidth=1.6, alpha=0.9)
+    ax.axvline(bootstrap_epoch, color=bootstrap_color, linestyle="--", linewidth=1.8, alpha=0.9)
     ax.annotate(
-        "bootstrap",
+        "Bootstrap\nepoca 14",
         (bootstrap_epoch, bootstrap_time),
         textcoords="offset points",
-        xytext=(12, 12),
+        xytext=(16, 18),
         ha="left",
-        color="#c26b32",
-        fontsize=11,
-        fontweight="semibold",
+        va="bottom",
+        color=bootstrap_color,
+        fontsize=11.5,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "-", "color": bootstrap_color, "linewidth": 1.2},
     )
 
-    ax.text(0.02, 0.96, "Prima del bootstrap", transform=ax.transAxes, va="top", ha="left", fontsize=10, color="#265d97")
-    ax.text(0.98, 0.96, "Dopo il bootstrap", transform=ax.transAxes, va="top", ha="right", fontsize=10, color="#c26b32")
+    zone_label_style = {
+        "transform": ax.get_xaxis_transform(),
+        "ha": "center",
+        "va": "bottom",
+        "fontsize": 10,
+        "fontweight": "semibold",
+    }
+    ax.text(7, 0.025, "Prima del bootstrap", color="#1E40AF", **zone_label_style)
+    ax.text(14, 0.025, "Bootstrap", color=bootstrap_color, **zone_label_style)
+    ax.text(17.5, 0.025, "Dopo il bootstrap", color="#0F766E", **zone_label_style)
 
     ax.set_xlabel("Epoca")
     ax.set_ylabel("Tempo per epoca (s)")
-    ax.grid(True, which="major", linestyle=":", alpha=0.45)
+    ax.grid(True, axis="y", which="major", linestyle=":", color="#94A3B8", alpha=0.7)
+    ax.grid(False, axis="x")
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:g}"))
-    ax.xaxis.set_major_locator(ticker.FixedLocator(frame["epoch"].tolist()))
-    ax.xaxis.set_major_formatter(
-        ticker.FixedFormatter([str(value) for value in frame["epoch"].tolist()])
-    )
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     ax.set_xlim(0.5, frame["epoch"].max() + 0.5)
+    ax.set_ylim(0, frame["epoch_time_seconds"].max() * 1.16)
 
     fig.tight_layout()
-    fig.savefig(output_path, dpi=180)
+    fig.savefig(output_path, dpi=220)
     plt.close(fig)
 
 
