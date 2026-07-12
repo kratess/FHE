@@ -55,7 +55,7 @@ def load_results(scheme):
     return aggregated.merge(stddev, on=key_cols, how="left")
 
 
-def draw(operation, filename, ylabel, metric="cpu_time", schemes=SCHEMES):
+def draw(operation, filename, ylabel, title, metric="cpu_time", schemes=SCHEMES):
     fig, ax = plt.subplots(figsize=(8.4, 4.8))
     plotted = False
     for scheme in schemes:
@@ -101,6 +101,7 @@ def draw(operation, filename, ylabel, metric="cpu_time", schemes=SCHEMES):
     ax.xaxis.set_minor_locator(ticker.NullLocator())
     ax.set_yscale("linear")
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:g}"))
+    ax.set_title(title, pad=12)
     ax.set_xlabel("Dimensione dell'anello N")
     ax.set_ylabel(ylabel)
     ax.grid(True, which="both", linestyle=":", alpha=0.45)
@@ -119,7 +120,7 @@ if __name__ == "__main__":
             "axes.spines.right": False,
         }
     )
-    draw("BM_EvalAdd", "benchmark_add.png", "Tempo (ms)")
-    draw("BM_EvalMult", "benchmark_mult.png", "Tempo (ms)")
-    draw("BM_Bootstrap", "benchmark_bootstrap.png", "Tempo (ms)", schemes=("ckks",))
-    draw("BM_ContextCreation", "benchmark_memory.png", "Heap osservato (MB)", metric="MB")
+    draw("BM_EvalAdd", "benchmark_add.png", "Tempo (ms)", "Somma omomorfica — BFV, BGV, CKKS")
+    draw("BM_EvalMult", "benchmark_mult.png", "Tempo (ms)", "Moltiplicazione omomorfica — BFV, BGV, CKKS")
+    draw("BM_Bootstrap", "benchmark_bootstrap.png", "Tempo (ms)", "Bootstrapping — CKKS", schemes=("ckks",))
+    draw("BM_ContextCreation", "benchmark_memory.png", "Heap osservato (MB)", "Creazione del contesto — BFV, BGV, CKKS", metric="MB")
