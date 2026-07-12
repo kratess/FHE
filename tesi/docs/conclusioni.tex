@@ -1,0 +1,11 @@
+\chapter{Conclusioni}
+
+La cifratura omomorfica permette di ripensare il rapporto tra dati e calcolo: il soggetto che elabora non deve necessariamente vedere ci\`o che elabora. Questa possibilit\`a apre scenari utili, ma introduce costi e vincoli che devono essere misurati e compresi.
+
+La tesi ha seguito un percorso intenzionalmente graduale. La prima parte ha chiarito il ruolo e le differenze operative tra BFV, BGV e CKKS. La seconda ha mostrato, tramite benchmark, che tempo, memoria, profondit\`a moltiplicativa e gestione delle chiavi di valutazione incidono in modo concreto sulla fattibilit\`a di un'applicazione.
+
+Su questa base sono stati analizzati due casi di studio. Il primo ha riguardato la regressione lineare in ambito medico, dove CKKS consente di trattare quantit\`a numeriche approssimate mantenendo il dato protetto durante la fase di calcolo. Il secondo ha proposto \texttt{fhe-vdaf}, una costruzione ispirata alle VDAF che usa BGV per validare e aggregare report cifrati senza esporre direttamente i contributi individuali.
+
+L'insieme dei risultati mostra che la privacy non dipende soltanto dalla presenza di uno schema crittografico avanzato. Dipende anche dal tipo di dato da rappresentare, dai parametri scelti, dal costo delle operazioni supportate e dall'architettura che distribuisce chiavi, ruoli e fiducia tra gli attori del sistema.
+
+In sintesi, la cifratura omomorfica non elimina i compromessi del calcolo sicuro, ma offre strumenti concreti per costruire sistemi in cui l'elaborazione dei dati sensibili sia pi\`u controllata. In questo senso, teoria, benchmark e applicazioni non restano parti separate, ma descrivono fasi successive dello stesso problema ingegneristico.

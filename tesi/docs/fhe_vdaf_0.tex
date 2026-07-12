@@ -3,12 +3,12 @@
 \section{Introduzione}
 Prio3 VDAF \`e, in modo molto semplice, un protocollo pensato per raccogliere dati da pi\`u client e calcolarne un risultato aggregato senza esporre il contributo individuale di ciascuno \cite{prio}. L'idea generale \`e che ogni client non invii direttamente il proprio valore in chiaro a un unico soggetto, ma produca una rappresentazione adatta a essere elaborata da pi\`u attori del protocollo. In questo modo, il sistema finale pu\`o recuperare il risultato complessivo senza ricostruire facilmente il dato del singolo partecipante.
 
-L'obiettivo di questo capitolo \`e allora il seguente: replicare in ambiente FHE la forma generale di un protocollo di aggregazione ispirato a Prio3, mantenendo l'idea di fondo di raccolta privata e di validazione dei report, ma semplificando l'architettura. La costruzione che introduciamo, chiamata \texttt{fhe-vdaf-0}, usa lo schema omomorfico BGV: i report vengono cifrati dai client, inviati a un unico aggregatore, validati sotto cifratura e poi sommati, in modo che l'attore finale possa apprendere soltanto il risultato aggregato.
+L'obiettivo di questo capitolo \`e allora il seguente: replicare in ambiente FHE la forma generale di un protocollo di aggregazione ispirato a Prio3, mantenendo l'idea di fondo di raccolta privata e di validazione dei report, ma semplificando l'architettura. La costruzione che introduciamo, chiamata \texttt{fhe-vdaf}, usa lo schema omomorfico BGV: i report vengono cifrati dai client, inviati a un unico aggregatore, validati sotto cifratura e poi sommati, in modo che l'attore finale possa apprendere soltanto il risultato aggregato.
 
 La scelta di BGV non \`e casuale. In questo contesto i report sono valori interi e tutta la logica di validazione viene espressa tramite aritmetica modulare. BGV \`e quindi naturale perch\'e lavora direttamente su interi modulo $p$. Questo significa che somme e moltiplicazioni avvengono nello stesso ambiente algebrico in cui vogliamo controllare i report, compreso il comportamento di overflow, che viene assorbito in modo coerente dalla riduzione modulo $p$.
 
-\section{Idea generale di \texttt{fhe-vdaf-0}}
-La struttura di \texttt{fhe-vdaf-0} pu\`o essere descritta in modo molto semplice:
+\section{Idea generale di \texttt{fhe-vdaf}}
+La struttura di \texttt{fhe-vdaf} pu\`o essere descritta in modo molto semplice:
 \begin{enumerate}
   \item il client vuole inviare un valore numerico;
   \item lo converte in una rappresentazione binaria a slot;
@@ -26,12 +26,12 @@ In pratica, tutti i report cifrati arrivano allo stesso aggregatore. La crittogr
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{figures/vdaf_0.png}
-\caption{Schema di fhe-vdaf-0.}
+\caption{Schema di fhe-vdaf.}
 \label{fig:vdaf_0}
 \end{figure}
 
 \subsection{Attori del sistema}
-Nel caso di \texttt{fhe-vdaf-0} si possono distinguere quattro attori principali:
+Nel caso di \texttt{fhe-vdaf} si possono distinguere quattro attori principali:
 \begin{itemize}
   \item il \emph{setup authority}, che crea il contesto crittografico e le chiavi;
   \item i \emph{client};
@@ -40,7 +40,7 @@ Nel caso di \texttt{fhe-vdaf-0} si possono distinguere quattro attori principali
 \end{itemize}
 
 \subsection{Chi possiede quali chiavi}
-Dal punto di vista della gestione delle chiavi, \texttt{fhe-vdaf-0} conserva la distinzione tra cifratura, valutazione omomorfica e decifratura finale.
+Dal punto di vista della gestione delle chiavi, \texttt{fhe-vdaf} conserva la distinzione tra cifratura, valutazione omomorfica e decifratura finale.
 
 La distribuzione tipica \`e la seguente:
 \begin{itemize}
@@ -53,7 +53,7 @@ La distribuzione tipica \`e la seguente:
 Questa separazione \`e importante. L'aggregatore pu\`o elaborare i dati cifrati ma, in condizioni normali, non pu\`o decifrarli. Il collector pu\`o decifrare, ma non riceve i singoli report in chiaro durante la fase di raccolta.
 
 \subsection{Conseguenze di sicurezza}
-L'aspetto pi\`u delicato di \texttt{fhe-vdaf-0} \`e la concentrazione dello schema presso l'aggregatore. Questo comporta che:
+L'aspetto pi\`u delicato di \texttt{fhe-vdaf} \`e la concentrazione dello schema presso l'aggregatore. Questo comporta che:
 \begin{itemize}
   \item tutti i ciphertext passano per lo stesso nodo;
   \item tutta la validazione viene eseguita nello stesso punto;
@@ -61,10 +61,10 @@ L'aspetto pi\`u delicato di \texttt{fhe-vdaf-0} \`e la concentrazione dello sche
   \item un'eventuale collusione tra aggregatore e soggetto che controlla la chiave segreta comprometterebbe la protezione dei report individuali.
 \end{itemize}
 
-Per questo motivo, \texttt{fhe-vdaf-0} \`e molto semplice da capire, ma meno forte di una soluzione con pi\`u aggregatori indipendenti.
+Per questo motivo, \texttt{fhe-vdaf} \`e molto semplice da capire, ma meno forte di una soluzione con pi\`u aggregatori indipendenti.
 
 \section{Architettura complessiva in uno scenario di dati aggregati}
-In \texttt{fhe-vdaf-0}, tutti i report vengono cifrati e inviati all'aggregatore. L'aggregatore non deve conoscere il contenuto di ciascun numero, ma deve poter:
+In \texttt{fhe-vdaf}, tutti i report vengono cifrati e inviati all'aggregatore. L'aggregatore non deve conoscere il contenuto di ciascun numero, ma deve poter:
 \begin{itemize}
   \item verificare che ogni report sia ben formato;
   \item scartare i report invalidi;
@@ -339,7 +339,7 @@ senza aver partecipato alla validazione dei singoli report e senza aver ricevuto
 L'architettura adottata presenta una serie di vantaggi pratici, ma anche limiti precisi che vanno esplicitati con chiarezza.
 
 \subsection{Vantaggi}
-I vantaggi principali di \texttt{fhe-vdaf-0} sono:
+I vantaggi principali di \texttt{fhe-vdaf} sono:
 \begin{itemize}
   \item semplicit\`a architetturale;
   \item minore complessit\`a di orchestrazione;
@@ -357,8 +357,8 @@ I principali limiti sono:
 \end{itemize}
 
 \section{Conclusioni}
-\texttt{fhe-vdaf-0} pu\`o essere visto come una forma molto semplice di raccolta privata di conteggi basata su cifratura omomorfica e validazione VDAF-like. Il meccanismo centrale \`e quello della codifica binaria del valore, del controllo elementare di validit\`a e dell'aggregazione cifrata presso un unico nodo.
+\texttt{fhe-vdaf} pu\`o essere visto come una forma molto semplice di raccolta privata di conteggi basata su cifratura omomorfica e validazione VDAF-like. Il meccanismo centrale \`e quello della codifica binaria del valore, del controllo elementare di validit\`a e dell'aggregazione cifrata presso un unico nodo.
 
 Il capitolo ha evidenziato tre aspetti principali. Il primo riguarda l'architettura: client, aggregatore unico e collector con chiavi chiaramente separate. Il secondo riguarda la codifica dell'input, che trasforma ogni valore ammesso in un vettore di bit pesati. Il terzo riguarda la validazione, basata su controlli polinomiali elementari ma molto efficaci per riconoscere valori non binari.
 
-In uno scenario reale, questa architettura pu\`o essere utile come base sperimentale o come soluzione centralizzata per aggregazioni relativamente semplici. Resta per\`o importante ricordare che la semplicit\`a di \texttt{fhe-vdaf-0} corrisponde anche a una minore distribuzione del trust. Di conseguenza, il suo impiego va valutato nel quadro pi\`u ampio della governance del sistema, della gestione delle chiavi e delle garanzie organizzative offerte dall'infrastruttura che lo ospita.
+In uno scenario reale, questa architettura pu\`o essere utile come base sperimentale o come soluzione centralizzata per aggregazioni relativamente semplici. Resta per\`o importante ricordare che la semplicit\`a di \texttt{fhe-vdaf} corrisponde anche a una minore distribuzione del trust. Di conseguenza, il suo impiego va valutato nel quadro pi\`u ampio della governance del sistema, della gestione delle chiavi e delle garanzie organizzative offerte dall'infrastruttura che lo ospita.
