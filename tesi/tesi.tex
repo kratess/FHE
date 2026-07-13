@@ -1,11 +1,10 @@
 \documentclass[12pt,a4paper]{report}
 \pdfminorversion=7
-
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[italian]{babel}
 \usepackage{amsmath,amssymb,amsthm}
-\usepackage[a4paper,margin=3cm]{geometry}
+\usepackage[a4paper,left=3cm,right=2cm,top=2.5cm,bottom=2.5cm]{geometry}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{hyperref}
@@ -16,6 +15,7 @@
 \usepackage{ragged2e}
 \usepackage{booktabs}
 \usepackage{xcolor}
+\usepackage{setspace}
 
 \lstset{language=Matlab,
 basicstyle=\ttfamily\footnotesize,
@@ -25,8 +25,9 @@ columns=fullflexible
 \setlist[enumerate,1]{label=(\alph*), leftmargin=1.2cm, rightmargin=1.2cm}
 \renewcommand{\contentsname}{Indice dei contenuti}
 \renewcommand{\figurename}{Figura}
-\setlength{\parindent}{1.25cm}
+\setlength{\parindent}{1cm}
 \setlength{\parskip}{0pt}
+\onehalfspacing
 
 \title{Elaborazione e aggregazione di dati privacy-aware con tecniche omomorfiche}
 \author{Doru Ionut Parvu}
